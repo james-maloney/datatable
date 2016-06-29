@@ -11,6 +11,7 @@ type Table struct {
 	Columns []*Column              `json:"cols"`
 	Rows    []*Row                 `json:"rows"`
 	P       map[string]interface{} `json:"p,omitempty"`
+	Meta    interface{}            `json:"meta,omitempty"`
 }
 
 type Row struct {
@@ -65,33 +66,35 @@ type Column struct {
 	Pattern string     `json:"pattern,omitempty"` // Optional - String pattern that was used by a data source to format numeric, date, or time column values
 }
 
-func NewTable() *Table {
+func New() *Table {
 	return &Table{
 		Columns: []*Column{},
 		Rows:    []*Row{},
 	}
 }
 
-func (t *Table) AddColumn(c *Column) *Table {
+func (t *Table) AddColumn(columns ...*Column) *Table {
 	if t.Columns == nil {
 		t.Columns = []*Column{}
 	}
 	if t.Rows == nil {
 		t.Rows = []*Row{}
 	}
-
-	if c.Role != "" {
-		t, ok := RoleType[c.Role]
-		if ok {
-			c.Type = t
+	for _, c := range columns {
+		c := c
+		if len(c.Role) > 0 {
+			t, ok := RoleType[c.Role]
+			if ok {
+				c.Type = t
+			}
 		}
-	}
 
-	if len(c.Type) == 0 {
-		c.Type = String
-	}
+		if len(c.Type) == 0 {
+			c.Type = String
+		}
 
-	t.Columns = append(t.Columns, c)
+		t.Columns = append(t.Columns, c)
+	}
 
 	return t
 }
@@ -101,13 +104,23 @@ func FormatDate(t time.Time) string {
 	return fmt.Sprintf("Date(%v,%v,%v,%v,%v)", t.Year(), int(t.Month())-1, t.Day(), t.Hour(), t.Minute())
 }
 
-func (t *Table) AddRow(items []*Cell) {
+func (t *Table) AddRow(cells []*Cell) *Table {
 	if t.Rows == nil {
 		t.Rows = []*Row{}
 	}
 
 	r := &Row{}
-	r.Cells = items
+	r.Cells = cells
 
 	t.Rows = append(t.Rows, r)
+
+	return t
+}
+
+type PieOptions struct {
+	Legend string  `json:"legend,omitempty"` // left/right
+	Title  string  `json:"title,omitempty"`
+	Width  float64 `json:"width,omitempty"`
+	Height float64 `json:"height,omitempty"`
+	Is3D   bool    `json:"is3D,omitempty"`
 }
