@@ -25,6 +25,10 @@ type Cell struct {
 
 type ColumnType string
 
+func (ct ColumnType) String() string {
+	return string(ct)
+}
+
 var (
 	String    ColumnType = "string"
 	Number    ColumnType = "number"
